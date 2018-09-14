@@ -1,4 +1,3 @@
-*我在这里写了一行话*
 Questions:		
 > 语义理解的问题 semantic understanding		
 > 上下文理解的问题 context issue			
