@@ -227,3 +227,10 @@ the symbolic LU output is passed to the DM, the classic DM includes two stages:
 > dialogue state tracking              
 > policy learning         
 
+## Using Recurrent Neural Networks for slot filling in spoken language understanding 2018.09.14
+
+The goal of spoken language understanding is to convert the recognition of user input $S_i$ into a task-specific semantic representation of the user`s intention $U_i$ at each turn. the dialogue manager interprets $U_i$ and decides on the most appropriate system action $A_i$. </br>
+the semantic parsing of input utterances in SLU consists of 3 tasks: </br>
+> domain detection</br>
+> intent determination</br>
+> slot filling</br>
