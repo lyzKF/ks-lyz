@@ -1,6 +1,7 @@
 <p align="center"><font size="12"><font color="black">人机对话综述</font></font></p>
 <p align="right"><font size="5"><font color="blue">liguoliang@kingsoft.com</font></font></p>
 <p align="right"><font size="5"><font color="blue">2018.09.14</font></font></p>
+
 # 人机对话
 人机对话系统可以分为四个部分：开放域聊天、任务驱动的多伦对话、问答、推荐
 
