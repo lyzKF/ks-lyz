@@ -97,7 +97,7 @@ class TranslateDemo():
         # Encoder
         with tf.variable_scope("encoder"):
             # Embedding
-            self.enc = embedding(
+            enc = embedding(
                 self.x,
                 vocab_size=len(de2idx),
                 num_units=hp.hidden_units,
@@ -106,14 +106,14 @@ class TranslateDemo():
 
             # Positional Encoding
             if hp.sinusoid:
-                self.enc += positional_encoding(
+                enc += positional_encoding(
                     self.x,
                     num_units=hp.hidden_units,
                     zero_pad=False,
                     scale=False,
                     scope="enc_pe")
             else:
-                self.enc += embedding(
+                enc += embedding(
                     tf.tile(tf.expand_dims(tf.range(tf.shape(self.x)[1]), 0), [
                             tf.shape(self.x)[0], 1]),
                     vocab_size=hp.maxlen,
@@ -123,8 +123,8 @@ class TranslateDemo():
                     scope="enc_pe")
 
             # Dropout
-            self.enc = tf.layers.dropout(
-                self.enc,
+            enc = tf.layers.dropout(
+                enc,
                 rate=hp.dropout_rate,
                 training=tf.convert_to_tensor(self.is_training))
 
@@ -137,8 +137,8 @@ class TranslateDemo():
                     with tf.variable_scope("num_blocks_{}".format(i)):
                         # Multihead Attention
                         encoder_block = multihead_attention(
-                            queries=self.enc,
-                            keys=self.enc,
+                            queries=enc,
+                            keys=enc,
                             num_units=hp.hidden_units,
                             num_heads=hp.num_heads,
                             dropout_rate=hp.dropout_rate,
@@ -152,12 +152,13 @@ class TranslateDemo():
                 encoder_output_list.append(encoder_block)
             # concat the blocks
             encoder_output = tf.concat(encoder_output_list, axis=-1)
-            self.enc = tf.layers.dense(
+            enc = tf.layers.dense(
                 encoder_output,
                 hparams.hidden_size,
                 activation=tf.nn.relu
             )
-        return self.enc
+
+        return enc
 
     def decoder_layer(self, enc):
         """
@@ -168,7 +169,7 @@ class TranslateDemo():
         """
         with tf.variable_scope("decoder"):
             # Embedding
-            self.dec = embedding(
+            dec = embedding(
                 self.decoder_inputs,
                 vocab_size=len(en2idx),
                 num_units=hp.hidden_units,
@@ -177,7 +178,7 @@ class TranslateDemo():
 
             # Positional Encoding
             if hp.sinusoid:
-                self.dec += positional_encoding(
+                dec += positional_encoding(
                     self.decoder_inputs,
                     vocab_size=hp.maxlen,
                     num_units=hp.hidden_units,
@@ -185,7 +186,7 @@ class TranslateDemo():
                     scale=False,
                     scope="dec_pe")
             else:
-                self.dec += embedding(
+                dec += embedding(
                     tf.tile(
                         tf.expand_dims(
                             tf.range(tf.shape(self.decoder_inputs)[1]), 0),
@@ -197,8 +198,8 @@ class TranslateDemo():
                     scope="dec_pe")
 
             # Dropout
-            self.dec = tf.layers.dropout(
-                self.dec,
+            dec = tf.layers.dropout(
+                dec,
                 rate=hp.dropout_rate,
                 training=tf.convert_to_tensor(self.is_training))
 
@@ -209,10 +210,10 @@ class TranslateDemo():
                 # Blocks
                 for i in range(blocks):
                     with tf.variable_scope("num_blocks_{}".format(i)):
-                        # Multihead Attention ( self-attention)
-                        decoder_block = multihead_attention(
-                            queries=self.dec,
-                            keys=self.dec,
+                        # Multihead Attention_1
+                        decoder_block_1 = multihead_attention(
+                            queries=dec,
+                            keys=dec,
                             num_units=hp.hidden_units,
                             num_heads=hp.num_heads,
                             dropout_rate=hp.dropout_rate,
@@ -220,20 +221,30 @@ class TranslateDemo():
                             causality=True,
                             scope="self_attention")
 
+                        # Multihead Attention_2
+                        decoder_block_2 = multihead_attention(
+                            queries=decoder_block_1,
+                            keys=enc,
+                            num_units=hp.hidden_units,
+                            num_heads=hp.num_heads,
+                            dropout_rate=hp.dropout_rate,
+                            is_training=is_training,
+                            causality=False,
+                            scope="vanilla_attention")
                         # Feed Forward
-                        encoder_block = feedforward(
-                            encoder_block,
+                        decoder_block = feedforward(
+                            encoder_block_2,
                             num_units=[4 * hp.hidden_units, hp.hidden_units]
                         )
-                decoder_output_list.append(encoder_block)
+                decoder_output_list.append(decoder_block)
             # concat the blocks
             decoder_output = tf.concat(decoder_output_list, axis=-1)
-            self.enc = tf.layers.dense(
+            dec = tf.layers.dense(
                 decoder_output,
                 hparams.hidden_size,
                 activation=tf.nn.relu
             )
-        return self.dec
+        return dec
 
     def loss_layer(self, dec):
         """
@@ -316,8 +327,7 @@ class TranslateDemo():
                             step, mean_loss, "%.4f" % time.time()))
                     if step % 1000 == 0:
                         print("save model")
-                        saver.save(sess, hp.logdir +
-                                   "/my-model", global_step=step)
+                        saver.save(sess, hp.logdir + "/my-model", global_step=step)
 
     def eval(self, preds_g):
         """

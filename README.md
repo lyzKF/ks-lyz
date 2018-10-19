@@ -1,3 +1,6 @@
 # ks-lyz
-but I know I'm gonna get there someday					
-我的论文阅读笔记
+
+E-mail: lyz038015@163.com
+
+
+but I know I'm gonna get there someday
