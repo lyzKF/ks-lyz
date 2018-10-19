@@ -8,7 +8,6 @@ import time
 import codecs
 import argparse
 import numpy as np
-from tqdm import tqdm
 from modules import *
 import tensorflow as tf
 from hyperparams import Hyperparams as hp
