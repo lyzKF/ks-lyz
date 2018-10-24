@@ -9,11 +9,11 @@ def running_time(func):
     获取程序运行时间
     """
     def wrapper(*args, **kwargs):
-        print("input", *args)
+        #print("input", *args)
         local_time = time.time()
+        func(*args, **kwargs)
         print("running time:%.3f"%(time.time() - local_time))
-        print(func(*args))
-        #return func(*args, **kwargs)
+        #print(func(*args))
     return wrapper
 
 a_l = [1,2,3]
