@@ -203,48 +203,34 @@ class TranslateDemo():
                 rate=hp.dropout_rate,
                 training=tf.convert_to_tensor(self.is_training))
 
-            decoder_output_list = list()
-            block_layers = [8, 6, 4, 2]
-            for blocks in block_layers:
+            with tf.variable_scope("num_blocks_{}".format(i)):
+                # Multihead Attention_1
+                decoder_block_1 = multihead_attention(
+                    queries=dec,
+                    keys=dec,
+                    num_units=hp.hidden_units,
+                    num_heads=hp.num_heads,
+                    dropout_rate=hp.dropout_rate,
+                    is_training=self.is_training,
+                    causality=True,
+                    scope="self_attention")
 
-                # Blocks
-                for i in range(blocks):
-                    with tf.variable_scope("num_blocks_{}".format(i)):
-                        # Multihead Attention_1
-                        decoder_block_1 = multihead_attention(
-                            queries=dec,
-                            keys=dec,
-                            num_units=hp.hidden_units,
-                            num_heads=hp.num_heads,
-                            dropout_rate=hp.dropout_rate,
-                            is_training=self.is_training,
-                            causality=True,
-                            scope="self_attention")
-
-                        # Multihead Attention_2
-                        decoder_block_2 = multihead_attention(
-                            queries=decoder_block_1,
-                            keys=enc,
-                            num_units=hp.hidden_units,
-                            num_heads=hp.num_heads,
-                            dropout_rate=hp.dropout_rate,
-                            is_training=is_training,
-                            causality=False,
-                            scope="vanilla_attention")
-                        # Feed Forward
-                        decoder_block = feedforward(
-                            encoder_block_2,
-                            num_units=[4 * hp.hidden_units, hp.hidden_units]
-                        )
-                decoder_output_list.append(decoder_block)
-            # concat the blocks
-            decoder_output = tf.concat(decoder_output_list, axis=-1)
-            dec = tf.layers.dense(
-                decoder_output,
-                hparams.hidden_size,
-                activation=tf.nn.relu
-            )
-        return dec
+                # Multihead Attention_2
+                decoder_block_2 = multihead_attention(
+                    queries=decoder_block_1,
+                    keys=enc,
+                    num_units=hp.hidden_units,
+                    num_heads=hp.num_heads,
+                    dropout_rate=hp.dropout_rate,
+                    is_training=is_training,
+                    causality=False,
+                    scope="vanilla_attention")
+                # Feed Forward
+                decoder_block = feedforward(
+                    encoder_block_2,
+                    num_units=[4 * hp.hidden_units, hp.hidden_units]
+                )
+        return decoder_block
 
     def loss_layer(self, dec):
         """
